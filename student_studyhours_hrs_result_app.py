@@ -9,7 +9,6 @@ if st.button("Predict"):
     st.success("Student will PASS")
   else:
     st.error("Student will FAIL")
-[10:49, 17/09/2026] Abhay: import streamlit as st
 import joblib
 import pandas as pd
 
