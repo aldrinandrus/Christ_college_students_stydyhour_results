@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-
 from sklearn.linear_model import LogisticRegression
 
 
@@ -51,18 +50,15 @@ df = pd.DataFrame(data)
 
 
 # ============================================================
-# PREPARE FEATURES AND TARGET
+# INPUT FEATURES AND TARGET
 # ============================================================
 
-# Input features
 X = df[["StudyHours", "Attendance"]]
-
-# Output
 y = df["Result"]
 
 
 # ============================================================
-# TRAIN LOGISTIC REGRESSION MODEL
+# TRAIN MODEL
 # ============================================================
 
 model = LogisticRegression(
@@ -85,7 +81,7 @@ st.write(
 
 
 # ============================================================
-# INPUT: STUDY HOURS
+# INPUTS
 # ============================================================
 
 hours = st.number_input(
@@ -95,11 +91,6 @@ hours = st.number_input(
     value=5.0,
     step=0.5
 )
-
-
-# ============================================================
-# INPUT: ATTENDANCE
-# ============================================================
 
 attendance = st.number_input(
     "Enter Attendance (%)",
@@ -111,12 +102,12 @@ attendance = st.number_input(
 
 
 # ============================================================
-# PREDICT BUTTON
+# PREDICTION
 # ============================================================
 
 if st.button("Predict Result"):
 
-    # Create student input
+    # Create student data
     student = pd.DataFrame(
         {
             "StudyHours": [hours],
@@ -124,19 +115,62 @@ if st.button("Predict Result"):
         }
     )
 
-
-    # ========================================================
-    # PREDICTION
-    # ========================================================
-
+    # Get Logistic Regression prediction
     prediction = model.predict(student)
-
     probability = model.predict_proba(student)
 
+    model_pass_probability = probability[0][1] * 100
+    model_fail_probability = probability[0][0] * 100
 
-    # Probability values
-    fail_probability = probability[0][0] * 100
-    pass_probability = probability[0][1] * 100
+
+    # ========================================================
+    # MINIMUM REQUIREMENTS
+    # ========================================================
+
+    minimum_study_hours = 4.0
+    minimum_attendance = 60.0
+
+
+    # ========================================================
+    # FINAL DECISION
+    # ========================================================
+
+    # Very low study hours = FAIL
+    if hours < minimum_study_hours:
+
+        final_prediction = 0
+
+        # Override probability to reflect the final decision
+        pass_probability = 0.0
+        fail_probability = 100.0
+
+        reason = (
+            f"Study hours are below the minimum required "
+            f"{minimum_study_hours:g} hours."
+        )
+
+    # Very low attendance = FAIL
+    elif attendance < minimum_attendance:
+
+        final_prediction = 0
+
+        pass_probability = 0.0
+        fail_probability = 100.0
+
+        reason = (
+            f"Attendance is below the minimum required "
+            f"{minimum_attendance:g}%."
+        )
+
+    # Otherwise use Logistic Regression
+    else:
+
+        final_prediction = prediction[0]
+
+        pass_probability = model_pass_probability
+        fail_probability = model_fail_probability
+
+        reason = "Prediction is based on the Logistic Regression model."
 
 
     # ========================================================
@@ -145,7 +179,7 @@ if st.button("Predict Result"):
 
     st.subheader("Prediction Result")
 
-    if prediction[0] == 1:
+    if final_prediction == 1:
         st.success("🎉 Student will PASS")
     else:
         st.error("❌ Student will FAIL")
@@ -165,7 +199,14 @@ if st.button("Predict Result"):
 
 
     # ========================================================
-    # DISPLAY INPUT DETAILS
+    # DISPLAY REASON
+    # ========================================================
+
+    st.info(reason)
+
+
+    # ========================================================
+    # STUDENT DETAILS
     # ========================================================
 
     st.subheader("Student Details")
@@ -183,3 +224,4 @@ if st.button("Predict Result"):
             "Attendance",
             f"{attendance:g}%"
         )
+
