@@ -27,6 +27,13 @@ data = {
         9, 9, 10, 10, 11
     ],
 
+    "Attendance": [
+        55, 60, 65, 60, 70,
+        65, 75, 70, 80, 75,
+        85, 80, 90, 85, 92,
+        90, 95, 92, 96, 98
+    ],
+
     "Result": [
         0, 0, 0, 0, 0,
         0, 1, 1, 1, 1,
@@ -44,10 +51,13 @@ df = pd.DataFrame(data)
 
 
 # ============================================================
-# PREPARE INPUT AND OUTPUT
+# PREPARE FEATURES AND TARGET
 # ============================================================
 
-X = df[["StudyHours"]]
+# Input features
+X = df[["StudyHours", "Attendance"]]
+
+# Output
 y = df["Result"]
 
 
@@ -55,7 +65,9 @@ y = df["Result"]
 # TRAIN LOGISTIC REGRESSION MODEL
 # ============================================================
 
-model = LogisticRegression(random_state=42)
+model = LogisticRegression(
+    random_state=42
+)
 
 model.fit(X, y)
 
@@ -67,13 +79,13 @@ model.fit(X, y)
 st.title("🎓 Student Pass/Fail Prediction")
 
 st.write(
-    "Enter the student's study hours to predict "
-    "whether the student will PASS or FAIL."
+    "Enter the student's study hours and attendance "
+    "to predict whether the student will PASS or FAIL."
 )
 
 
 # ============================================================
-# STUDY HOURS INPUT
+# INPUT: STUDY HOURS
 # ============================================================
 
 hours = st.number_input(
@@ -86,28 +98,52 @@ hours = st.number_input(
 
 
 # ============================================================
-# PREDICTION
+# INPUT: ATTENDANCE
+# ============================================================
+
+attendance = st.number_input(
+    "Enter Attendance (%)",
+    min_value=0.0,
+    max_value=100.0,
+    value=75.0,
+    step=1.0
+)
+
+
+# ============================================================
+# PREDICT BUTTON
 # ============================================================
 
 if st.button("Predict Result"):
 
+    # Create student input
     student = pd.DataFrame(
         {
-            "StudyHours": [hours]
+            "StudyHours": [hours],
+            "Attendance": [attendance]
         }
     )
+
+
+    # ========================================================
+    # PREDICTION
+    # ========================================================
 
     prediction = model.predict(student)
 
     probability = model.predict_proba(student)
 
-    pass_probability = probability[0][1] * 100
+
+    # Probability values
     fail_probability = probability[0][0] * 100
+    pass_probability = probability[0][1] * 100
 
 
     # ========================================================
     # DISPLAY RESULT
     # ========================================================
+
+    st.subheader("Prediction Result")
 
     if prediction[0] == 1:
         st.success("🎉 Student will PASS")
@@ -129,12 +165,21 @@ if st.button("Predict Result"):
 
 
     # ========================================================
-    # DISPLAY STUDENT DETAILS
+    # DISPLAY INPUT DETAILS
     # ========================================================
 
     st.subheader("Student Details")
 
-    st.metric(
-        "Study Hours",
-        f"{hours:g} hours"
-    )
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "Study Hours",
+            f"{hours:g} hours"
+        )
+
+    with col2:
+        st.metric(
+            "Attendance",
+            f"{attendance:g}%"
+        )
