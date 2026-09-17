@@ -1,13 +1,9 @@
-```python
 import streamlit as st
 import joblib
 import pandas as pd
 
 
-# ============================================================
-# PAGE CONFIGURATION
-# ============================================================
-
+# Page configuration
 st.set_page_config(
     page_title="Student Pass/Fail Prediction",
     page_icon="🎓",
@@ -15,10 +11,7 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# LOAD MODEL
-# ============================================================
-
+# Load the trained model
 @st.cache_resource
 def load_model():
     return joblib.load("logistic_regression_StudyHrs_model.pkl")
@@ -27,10 +20,7 @@ def load_model():
 model = load_model()
 
 
-# ============================================================
-# TITLE
-# ============================================================
-
+# Title
 st.title("🎓 Student Pass/Fail Prediction")
 
 st.write(
@@ -39,10 +29,7 @@ st.write(
 )
 
 
-# ============================================================
-# INPUTS
-# ============================================================
-
+# Student inputs
 hours = st.number_input(
     "Enter Study Hours",
     min_value=0.0,
@@ -60,13 +47,9 @@ attendance = st.number_input(
 )
 
 
-# ============================================================
-# PREDICT
-# ============================================================
-
+# Prediction
 if st.button("Predict Result"):
 
-    # Create input in the same format used during training
     student = pd.DataFrame(
         {
             "StudyHours": [hours],
@@ -74,56 +57,29 @@ if st.button("Predict Result"):
         }
     )
 
-    # Make prediction
     prediction = model.predict(student)
-
-    # Get prediction probability
     probability = model.predict_proba(student)
 
     pass_probability = probability[0][1] * 100
     fail_probability = probability[0][0] * 100
 
-
-    # ========================================================
-    # DISPLAY RESULT
-    # ========================================================
-
+    # Display result
     if prediction[0] == 1:
         st.success("🎉 Student will PASS")
     else:
         st.error("❌ Student will FAIL")
 
+    # Display probabilities
+    st.write(f"**Probability of Pass:** {pass_probability:.2f}%")
+    st.write(f"**Probability of Fail:** {fail_probability:.2f}%")
 
-    # ========================================================
-    # DISPLAY PROBABILITY
-    # ========================================================
-
-    st.write(
-        f"**Probability of Pass:** {pass_probability:.2f}%"
-    )
-
-    st.write(
-        f"**Probability of Fail:** {fail_probability:.2f}%"
-    )
-
-
-    # ========================================================
-    # DISPLAY INPUT DETAILS
-    # ========================================================
-
+    # Display entered details
     st.subheader("Student Details")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric(
-            "Study Hours",
-            f"{hours:g} hours"
-        )
+        st.metric("Study Hours", f"{hours:g} hours")
 
     with col2:
-        st.metric(
-            "Attendance",
-            f"{attendance:g}%"
-        )
-```
+        st.metric("Attendance", f"{attendance:g}%")
