@@ -1,4 +1,4 @@
-[10:22, 17/09/2026] Abhay: import streamlit as st
+import streamlit as st
 import joblib
 model=joblib.load("logistic_regression_StudyHrs_model.pkl")
 st.title("Student Pass/Fail based on Study Hours")
