@@ -1,9 +1,13 @@
 import streamlit as st
-import joblib
 import pandas as pd
 
+from sklearn.linear_model import LogisticRegression
 
-# Page configuration
+
+# ============================================================
+# PAGE CONFIGURATION
+# ============================================================
+
 st.set_page_config(
     page_title="Student Pass/Fail Prediction",
     page_icon="🎓",
@@ -11,25 +15,67 @@ st.set_page_config(
 )
 
 
-# Load the trained model
-@st.cache_resource
-def load_model():
-    return joblib.load("logistic_regression_StudyHrs_model.pkl")
+# ============================================================
+# DATASET
+# ============================================================
+
+data = {
+    "StudyHours": [
+        1, 2, 2, 3, 3,
+        4, 4, 5, 5, 6,
+        6, 7, 7, 8, 8,
+        9, 9, 10, 10, 11
+    ],
+
+    "Result": [
+        0, 0, 0, 0, 0,
+        0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1
+    ]
+}
 
 
-model = load_model()
+# ============================================================
+# CREATE DATAFRAME
+# ============================================================
+
+df = pd.DataFrame(data)
 
 
-# Title
+# ============================================================
+# PREPARE INPUT AND OUTPUT
+# ============================================================
+
+X = df[["StudyHours"]]
+y = df["Result"]
+
+
+# ============================================================
+# TRAIN LOGISTIC REGRESSION MODEL
+# ============================================================
+
+model = LogisticRegression(random_state=42)
+
+model.fit(X, y)
+
+
+# ============================================================
+# TITLE
+# ============================================================
+
 st.title("🎓 Student Pass/Fail Prediction")
 
 st.write(
-    "Enter the student's study hours and attendance "
-    "to predict whether the student will PASS or FAIL."
+    "Enter the student's study hours to predict "
+    "whether the student will PASS or FAIL."
 )
 
 
-# Student inputs
+# ============================================================
+# STUDY HOURS INPUT
+# ============================================================
+
 hours = st.number_input(
     "Enter Study Hours",
     min_value=0.0,
@@ -38,48 +84,57 @@ hours = st.number_input(
     step=0.5
 )
 
-attendance = st.number_input(
-    "Enter Attendance (%)",
-    min_value=0.0,
-    max_value=100.0,
-    value=75.0,
-    step=1.0
-)
 
+# ============================================================
+# PREDICTION
+# ============================================================
 
-# Prediction
 if st.button("Predict Result"):
 
     student = pd.DataFrame(
         {
-            "StudyHours": [hours],
-            "Attendance": [attendance]
+            "StudyHours": [hours]
         }
     )
 
     prediction = model.predict(student)
+
     probability = model.predict_proba(student)
 
     pass_probability = probability[0][1] * 100
     fail_probability = probability[0][0] * 100
 
-    # Display result
+
+    # ========================================================
+    # DISPLAY RESULT
+    # ========================================================
+
     if prediction[0] == 1:
         st.success("🎉 Student will PASS")
     else:
         st.error("❌ Student will FAIL")
 
-    # Display probabilities
-    st.write(f"**Probability of Pass:** {pass_probability:.2f}%")
-    st.write(f"**Probability of Fail:** {fail_probability:.2f}%")
 
-    # Display entered details
+    # ========================================================
+    # DISPLAY PROBABILITY
+    # ========================================================
+
+    st.write(
+        f"**Probability of Pass:** {pass_probability:.2f}%"
+    )
+
+    st.write(
+        f"**Probability of Fail:** {fail_probability:.2f}%"
+    )
+
+
+    # ========================================================
+    # DISPLAY STUDENT DETAILS
+    # ========================================================
+
     st.subheader("Student Details")
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.metric("Study Hours", f"{hours:g} hours")
-
-    with col2:
-        st.metric("Attendance", f"{attendance:g}%")
+    st.metric(
+        "Study Hours",
+        f"{hours:g} hours"
+    )
